@@ -39,6 +39,16 @@
  *   - remember whether the soft-limit warning was already emitted
  *   - include `struct list_head` linkage
  * ============================================================== */
+// ===================== NODE =====================
+typedef struct monitor_entry {
+    pid_t pid;
+    char container_id[32];
+    unsigned long soft_limit;
+    unsigned long hard_limit;
+    int soft_triggered;
+
+    struct list_head list;
+} monitor_entry_t;
 
 
 /* ==============================================================
