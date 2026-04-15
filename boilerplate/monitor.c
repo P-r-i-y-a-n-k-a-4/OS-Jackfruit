@@ -252,21 +252,6 @@ static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     mutex_unlock(&monitor_lock);
     return -ENOENT;
 }
-    printk(KERN_INFO
-           "[container_monitor] Unregister request container=%s pid=%d\n",
-           req.container_id, req.pid);
-
-    /* ==============================================================
-     * TODO 5: Remove a monitored entry on explicit unregister.
-     *
-     * Requirements:
-     *   - search by PID, container ID, or both
-     *   - remove the matching entry safely if found
-     *   - return status indicating whether a matching entry was removed
-     * ============================================================== */
-
-    return -ENOENT;
-}
 
 /* --- Provided: file operations --- */
 static struct file_operations fops = {
