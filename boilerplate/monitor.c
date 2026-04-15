@@ -193,6 +193,7 @@ static void timer_callback(struct timer_list *t)
 static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
     struct monitor_request req;
+    monitor_entry_t *entry, *tmp;
 
     (void)f;
 
@@ -205,20 +206,52 @@ static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     if (cmd == MONITOR_REGISTER) {
         printk(KERN_INFO
                "[container_monitor] Registering container=%s pid=%d soft=%lu hard=%lu\n",
-               req.container_id, req.pid, req.soft_limit_bytes, req.hard_limit_bytes);
+               req.container_id, req.pid,
+               req.soft_limit_bytes, req.hard_limit_bytes);
 
-        /* ==============================================================
-         * TODO 4: Add a monitored entry.
-         *
-         * Requirements:
-         *   - allocate and initialize one node from req
-         *   - validate allocation and limits
-         *   - insert into the shared list under the chosen lock
-         * ============================================================== */
+        if (req.soft_limit_bytes >= req.hard_limit_bytes)
+            return -EINVAL;
+
+        entry = kmalloc(sizeof(*entry), GFP_KERNEL);
+        if (!entry)
+            return -ENOMEM;
+
+        entry->pid = req.pid;
+        strncpy(entry->container_id, req.container_id,
+                sizeof(entry->container_id));
+        entry->container_id[sizeof(entry->container_id) - 1] = '\0';
+        entry->soft_limit = req.soft_limit_bytes;
+        entry->hard_limit = req.hard_limit_bytes;
+        entry->soft_triggered = 0;
+
+        mutex_lock(&monitor_lock);
+        list_add(&entry->list, &monitor_list);
+        mutex_unlock(&monitor_lock);
 
         return 0;
     }
 
+    printk(KERN_INFO
+           "[container_monitor] Unregister request container=%s pid=%d\n",
+           req.container_id, req.pid);
+
+    mutex_lock(&monitor_lock);
+
+    list_for_each_entry_safe(entry, tmp, &monitor_list, list)
+    {
+        if (entry->pid == req.pid &&
+            strcmp(entry->container_id, req.container_id) == 0)
+        {
+            list_del(&entry->list);
+            kfree(entry);
+            mutex_unlock(&monitor_lock);
+            return 0;
+        }
+    }
+
+    mutex_unlock(&monitor_lock);
+    return -ENOENT;
+}
     printk(KERN_INFO
            "[container_monitor] Unregister request container=%s pid=%d\n",
            req.container_id, req.pid);
