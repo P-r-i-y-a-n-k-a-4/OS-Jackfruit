@@ -146,16 +146,39 @@ static void kill_process(const char *container_id,
  * --------------------------------------------------------------- */
 static void timer_callback(struct timer_list *t)
 {
-    /* ==============================================================
-     * TODO 3: Implement periodic monitoring.
-     *
-     * Requirements:
-     *   - iterate through tracked entries safely
-     *   - remove entries for exited processes
-     *   - emit soft-limit warning once per entry
-     *   - enforce hard limit and then remove the entry
-     *   - avoid use-after-free while deleting during iteration
-     * ============================================================== */
+    monitor_entry_t *entry, *tmp;
+
+    mutex_lock(&monitor_lock);
+
+    list_for_each_entry_safe(entry, tmp, &monitor_list, list)
+    {
+        long rss = get_rss_bytes(entry->pid);
+
+        if (rss < 0) {
+            list_del(&entry->list);
+            kfree(entry);
+            continue;
+        }
+
+        if (!entry->soft_triggered && rss > entry->soft_limit) {
+            log_soft_limit_event(entry->container_id,
+                                 entry->pid,
+                                 entry->soft_limit,
+                                 rss);
+            entry->soft_triggered = 1;
+        }
+
+        if (rss > entry->hard_limit) {
+            kill_process(entry->container_id,
+                         entry->pid,
+                         entry->hard_limit,
+                         rss);
+            list_del(&entry->list);
+            kfree(entry);
+        }
+    }
+
+    mutex_unlock(&monitor_lock);
 
     mod_timer(&monitor_timer, jiffies + CHECK_INTERVAL_SEC * HZ);
 }
