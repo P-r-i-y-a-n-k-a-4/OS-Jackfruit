@@ -61,6 +61,9 @@ typedef struct monitor_entry {
  * You may choose either a mutex or a spinlock, but your README must
  * justify the choice in terms of the code paths you implemented.
  * ============================================================== */
+// ===================== GLOBAL LIST =====================
+static LIST_HEAD(monitor_list);
+static DEFINE_MUTEX(monitor_lock);
 
 
 /* --- Provided: internal device / timer state --- */
