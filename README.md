@@ -171,11 +171,11 @@ Used Alpine Linux minirootfs for minimal footprint and efficiency.
 ### Conclusion
 OS-Jackfruit demonstrates how container runtimes can be built from scratch using Linux primitives. It highlights process isolation, IPC, memory enforcement, and scheduling, serving as a compact demonstration of core operating system principles applied in a real-world system.
 
-###Authors
+### Authors
 - Priyanka M Reddy (PES2UG24CS378)
 - R Pooja (PES2UG24CS388)
 
-###Notes
+### Notes
 - Run commands with sudo where required
 - Ensure Linux kernel headers are installed before building the module
 - Tested on Ubuntu Linux
