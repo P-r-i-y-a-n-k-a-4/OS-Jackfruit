@@ -1,9 +1,9 @@
 # OS-Jackfruit: Lightweight Container Engine in C
 
 ## Team Information
-- **Name 1:**Priyanka M Reddy 
+- **Name 1:** Priyanka M Reddy 
   **SRN 1:** PES2UG24CS378 
-- **Name 2:**R Pooja
+- **Name 2:** R Pooja
   **SRN 2:** PES2UG24CS388
 
 ---
@@ -77,36 +77,36 @@ boilerplate/
 make
 ```
 
-###Load the Kernel Monitor and Set Permissions
+### Load the Kernel Monitor and Set Permissions
 ```bash
 sudo insmod monitor.ko
 sudo chmod 666 /dev/container_monitor
 ```
 
-###Create Container Root Filesystems
+### Create Container Root Filesystems
 ```bash
 cp -a ./rootfs-base ./rootfs-alpha
 ```
 
-###Start a Container with Memory Limits
+### Start a Container with Memory Limits
 ```bash
 sudo ./engine start alpha ./rootfs-alpha /bin/sh --soft-mib 48 --hard-mib 80
 ```
 
-###Check Tracking and Logs
+### Check Tracking and Logs
 ```bash
 sudo ./engine ps
 sudo dmesg | tail
 ```
 
-###Teardown
+### Teardown
 ```bash
 sudo ./engine stop alpha
 sudo rmmod monitor
 make clean
 ```
 
-###Design Decisions
+### Design Decisions
 - Isolation
 Used clone() system calls with flags (CLONE_NEWPID, CLONE_NEWNS, CLONE_NEWUTS) to ensure each container has its own process tree and hostname.
 - Communication
@@ -114,29 +114,29 @@ Implemented a character device driver (/dev/container_monitor) to bridge User-Sp
 - Filesystem
 Used Alpine Linux minirootfs for minimal footprint and efficiency.
 
-##Engineering Analysis
+## Engineering Analysis
 
-###Isolation Mechanisms
+### Isolation Mechanisms
 - PID Namespace: Containers have their own process tree; PID 1 inside container is isolated from host.
 - UTS Namespace: Independent hostname per container.
 - Mount Namespace & Chroot: Filesystem isolation using Alpine minirootfs.
 - Shared Kernel: All containers share the host kernel system call interface and MMU.
 
-###Supervisor and Process Lifecycle
+### Supervisor and Process Lifecycle
 - Supervisor (engine.c) manages container lifecycle.
 - Prevents zombie processes using waitpid.
 - Tracks Host PID and communicates with Kernel Monitor via IOCTL.
 
-###IPC and Synchronization
+### IPC and Synchronization
 - IOCTL: Registers container PID with kernel monitor.
 - Race Conditions: Avoided using mutexes/spinlocks in kernel module for atomic logging.
 
-###Memory Management and Enforcement
+### Memory Management and Enforcement
 - RSS (Resident Set Size): Measures memory held in RAM.
 - Limits: Soft limits warn; hard limits trigger OOM killer.
 - Kernel Enforcement: Only kernel can safely enforce memory allocation limits.
 
-###Scheduling Behavior
+### Scheduling Behavior
 - Linux Completely Fair Scheduler (CFS) manages workloads.
 - Lightweight runtime ensures near-zero scheduling overhead.
 - Containers remain responsive compared to VMs.
