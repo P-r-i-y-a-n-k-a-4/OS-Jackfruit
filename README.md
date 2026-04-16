@@ -57,6 +57,9 @@ This project provides a practical understanding of container runtime internals, 
 ---
 
 ## Project Structure
+
+```
+
 boilerplate/
 │── engine.c          # Container runtime and CLI
 │── monitor.c         # Kernel module for memory monitoring
@@ -66,6 +69,7 @@ boilerplate/
 │── Makefile          # Build configuration
 │── rootfs/           # Root filesystem for containers
 │── screenshots/      # Output screenshots
+```
 
 
 ---
@@ -141,7 +145,7 @@ Used Alpine Linux minirootfs for minimal footprint and efficiency.
 - Lightweight runtime ensures near-zero scheduling overhead.
 - Containers remain responsive compared to VMs.
 
-###Experiments and Results
+### Experiments and Results
 - Multi-container supervision under a single supervisor process
 - Container metadata tracking (PID, status, uptime)
 - Logging system using bounded buffer and pipes
@@ -150,21 +154,21 @@ Used Alpine Linux minirootfs for minimal footprint and efficiency.
 - CPU scheduling behavior based on nice values
 - Clean container termination without zombie processes
 
-###Technologies Used
+### Technologies Used
 - C Programming Language
 - Linux System Calls
 - UNIX Domain Sockets
 - Linux Kernel Modules
 - Process Scheduling (nice values)
 
-###Concepts Covered
+### Concepts Covered
 - Process Management
 - Inter-Process Communication (IPC)
 - Memory Management
 - Kernel-Level Programming
 - CPU Scheduling
 
-###Conclusion
+### Conclusion
 OS-Jackfruit demonstrates how container runtimes can be built from scratch using Linux primitives. It highlights process isolation, IPC, memory enforcement, and scheduling, serving as a compact demonstration of core operating system principles applied in a real-world system.
 
 ###Authors
