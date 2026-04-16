@@ -73,123 +73,106 @@ boilerplate/
 ## Build, Load & Set Instructions
 
 ### Build Everything
-```bash```
+```bash
 make
+```
 
-Load the Kernel Monitor and Set Permissions
-
-Create Container Root Filesystems
+###Load the Kernel Monitor and Set Permissions
+```bash
 sudo insmod monitor.ko
 sudo chmod 666 /dev/container_monitor
+```
 
-Create Container Root Filesystems
+###Create Container Root Filesystems
+```bash
 cp -a ./rootfs-base ./rootfs-alpha
+```
 
-Start a Container with Memory Limits
+###Start a Container with Memory Limits
+```bash
 sudo ./engine start alpha ./rootfs-alpha /bin/sh --soft-mib 48 --hard-mib 80
+```
 
-Check Tracking and Logs
+###Check Tracking and Logs
+```bash
 sudo ./engine ps
 sudo dmesg | tail
+```
 
-Teardown
+###Teardown
+```bash
 sudo ./engine stop alpha
 sudo rmmod monitor
 make clean
+```
 
-Design Decisions
-Isolation:  
+###Design Decisions
+- Isolation
 Used clone() system calls with flags (CLONE_NEWPID, CLONE_NEWNS, CLONE_NEWUTS) to ensure each container has its own process tree and hostname.
-
-Communication:  
+- Communication
 Implemented a character device driver (/dev/container_monitor) to bridge User-Space Engine and Kernel-Space Monitor.
-
-Filesystem:  
+- Filesystem
 Used Alpine Linux minirootfs for minimal footprint and efficiency.
 
-Engineering Analysis
-Isolation Mechanisms
-PID Namespace: Containers have their own process tree; PID 1 inside container is isolated from host.
-UTS Namespace: Independent hostname per container.
+##Engineering Analysis
 
-Mount Namespace & Chroot: Filesystem isolation using Alpine minirootfs.
+###Isolation Mechanisms
+- PID Namespace: Containers have their own process tree; PID 1 inside container is isolated from host.
+- UTS Namespace: Independent hostname per container.
+- Mount Namespace & Chroot: Filesystem isolation using Alpine minirootfs.
+- Shared Kernel: All containers share the host kernel system call interface and MMU.
 
-Shared Kernel: All containers share the host kernel system call interface and MMU.
+###Supervisor and Process Lifecycle
+- Supervisor (engine.c) manages container lifecycle.
+- Prevents zombie processes using waitpid.
+- Tracks Host PID and communicates with Kernel Monitor via IOCTL.
 
-Supervisor and Process Lifecycle
-Supervisor (engine.c) manages container lifecycle.
+###IPC and Synchronization
+- IOCTL: Registers container PID with kernel monitor.
+- Race Conditions: Avoided using mutexes/spinlocks in kernel module for atomic logging.
 
-Prevents zombie processes using waitpid.
+###Memory Management and Enforcement
+- RSS (Resident Set Size): Measures memory held in RAM.
+- Limits: Soft limits warn; hard limits trigger OOM killer.
+- Kernel Enforcement: Only kernel can safely enforce memory allocation limits.
 
-Tracks Host PID and communicates with Kernel Monitor via IOCTL.
-PC and Synchronization
-IOCTL: Registers container PID with kernel monitor.
+###Scheduling Behavior
+- Linux Completely Fair Scheduler (CFS) manages workloads.
+- Lightweight runtime ensures near-zero scheduling overhead.
+- Containers remain responsive compared to VMs.
 
-Race Conditions: Avoided using mutexes/spinlocks in kernel module for atomic logging.
+###Experiments and Results
+- Multi-container supervision under a single supervisor process
+- Container metadata tracking (PID, status, uptime)
+- Logging system using bounded buffer and pipes
+- CLI communication via UNIX domain sockets
+- Detection of soft and hard memory limits
+- CPU scheduling behavior based on nice values
+- Clean container termination without zombie processes
 
-Memory Management and Enforcement
-RSS (Resident Set Size): Measures memory held in RAM.
+###Technologies Used
+- C Programming Language
+- Linux System Calls
+- UNIX Domain Sockets
+- Linux Kernel Modules
+- Process Scheduling (nice values)
 
-Limits: Soft limits warn; hard limits trigger OOM killer.
+###Concepts Covered
+- Process Management
+- Inter-Process Communication (IPC)
+- Memory Management
+- Kernel-Level Programming
+- CPU Scheduling
 
-Kernel Enforcement: Only kernel can safely enforce memory allocation limits.
-
-Scheduling Behavior
-Linux Completely Fair Scheduler (CFS) manages workloads.
-
-Lightweight runtime ensures near-zero scheduling overhead.
-
-Containers remain responsive compared to VMs.
-
-Experiments and Results
-Multi-container supervision under a single supervisor process
-
-Container metadata tracking (PID, status, uptime)
-
-Logging system using bounded buffer and pipes
-
-CLI communication via UNIX domain sockets
-
-Detection of soft and hard memory limits
-
-CPU scheduling behavior based on nice values
-
-Clean container termination without zombie processes
-
-Technologies Used
-C Programming Language
-
-Linux System Calls
-
-UNIX Domain Sockets
-
-Linux Kernel Modules
-
-Process Scheduling (nice values)
-
-Concepts Covered
-Process Management
-
-Inter-Process Communication (IPC)
-
-Memory Management
-
-Kernel-Level Programming
-
-CPU Scheduling
-
-Conclusion
+###Conclusion
 OS-Jackfruit demonstrates how container runtimes can be built from scratch using Linux primitives. It highlights process isolation, IPC, memory enforcement, and scheduling, serving as a compact demonstration of core operating system principles applied in a real-world system.
 
-Authors
-Priyanka M Reddy (PES2UG24CS378)
-R Pooja (PES2UG24CS388)
+###Authors
+- Priyanka M Reddy (PES2UG24CS378)
+- R Pooja (PES2UG24CS388)
 
-Notes
-Run commands with sudo where required
-
-Ensure Linux kernel headers are installed before building the module
-
-Tested on Ubuntu Linux
-
+###Notes
+- Run commands with sudo where required
+- Ensure Linux kernel headers are installed before building the module
+- Tested on Ubuntu Linux
 
